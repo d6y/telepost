@@ -53,7 +53,7 @@ trait EmailWriter {
       dest.write(fromInputStream(b.getInputStream).bytes)
       
       // Scaled version to show in the blog:
-      val width = 250
+      val width = 500
       val inlineImgName = dest.name + "."+width+"." + dest.name.split("\\.").last
       val inlineFile = mediaDir / inlineImgName
       
