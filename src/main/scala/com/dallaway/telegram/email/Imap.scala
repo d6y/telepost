@@ -17,7 +17,7 @@ trait Imap {
           val m = inbox.getMessage(i)
           try {
             handler(m)
-            //m.setFlag(Flags.Flag.DELETED, true) // archive successfully processed messages
+            m.setFlag(Flags.Flag.DELETED, true) // archive successfully processed messages
           } catch {
             case x ⇒ x.printStackTrace
           }
