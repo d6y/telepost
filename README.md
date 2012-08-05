@@ -10,6 +10,8 @@ How use use
     
 This will connect to the me@example.org google email account, process emails, and write images to /path/to/my/blog/media and blog posts to /path/to/my/blog/_posts
 
+The subject is used as the title of the blog post and the filename.
+
 It will then delete the email (archive it). 
 
 
