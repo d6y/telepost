@@ -19,18 +19,18 @@ import org.apache.sanselan.formats.tiff.constants.TiffTagConstants
 import org.apache.sanselan.formats.tiff.TiffField
 
 object ImageResizer {
-  
+
   implicit def affineHelper(xform: AffineTransform) = new {
-    
+
     // thank you: http://jpegclub.org/exif_orientation.html
     val exifCodeToAngle = Map(
         6 → 90,   // turn right
         8 → 270,  // right left
         3 → 180 	// flip
     )
-    
-	  def correctOrientation(size: ImageSize, f: TiffField) = for (angle ← exifCodeToAngle.get(f.getIntValue) ) {
-	      val midx = size.width.toDouble / 2d
+
+    def correctOrientation(size: ImageSize, f: TiffField) = for (angle ← exifCodeToAngle.get(f.getIntValue) ) {
+        val midx = size.width.toDouble / 2d
         val midy = size.height.toDouble / 2d
 
         if (angle == 90 || angle == 270) {
@@ -39,55 +39,55 @@ object ImageResizer {
         }
 
         xform.rotate(math.toRadians(angle), midx, midy)
-	  }
-	}
-  
-	def scale(source: Path, mimeType: String, dest: Path, targetWidth: Int): Option[ImageSize] = {
+    }
+  }
 
-		 val sourceImage = source.inputStream.acquireAndGet(ImageIO.read)
-	   val size = ImageSize(sourceImage.getWidth(null), sourceImage.getHeight(null))
-	   val scale: Double = targetWidth.toDouble / size.width.toDouble
-	   
-	   val xform = new AffineTransform
-	   xform.scale(scale, scale)
-	   
-	   // Check to see if rotation is required
-	   Sanselan.getMetadata(source.inputStream.byteArray) match {
-		   case m: JpegImageMetadata ⇒ for ( v ← Option(m.findEXIFValue(TiffTagConstants.TIFF_TAG_ORIENTATION)) ) {
-		     xform.correctOrientation(size, v)
-		   }
-		   case _ ⇒ 
-		 }
-  
-	   // Write:
-		 
-	   for (
-	       writer ← ImageIO.getImageWritersByMIMEType(mimeType).toList.headOption
-	   ) yield {
-	     val op = new AffineTransformOp(xform, AffineTransformOp.TYPE_NEAREST_NEIGHBOR)
-	     val img = op.filter(sourceImage, null /*null means create the image for us*/)
+  def scale(source: Path, mimeType: String, dest: Path, targetWidth: Int): Option[ImageSize] = {
 
-	     dest.outputStream(StandardOpenOption.Create).acquireFor { out ⇒ 
-		     val ios = ImageIO.createImageOutputStream(out)
-	       writer.setOutput(ios)
-	       writer.write(
-	           /*metadata=*/null,
-	           new IIOImage(img, /*thumbnails=*/null, /*imageMetaData=*/null),
-	           writer.getDefaultWriteParam)
-	       writer.dispose
-	       ios.close
-	     }
-	     
-	     ImageSize(img.getWidth(), img.getHeight())
-	     
-	   }
-	   
+     val sourceImage = source.inputStream.acquireAndGet(ImageIO.read)
+     val size = ImageSize(sourceImage.getWidth(null), sourceImage.getHeight(null))
+     val scale: Double = targetWidth.toDouble / size.width.toDouble
 
-	}
-	
-	
-	
-	
-  
+     val xform = new AffineTransform
+     xform.scale(scale, scale)
+
+     // Check to see if rotation is required
+     Sanselan.getMetadata(source.inputStream.byteArray) match {
+       case m: JpegImageMetadata ⇒ for ( v ← Option(m.findEXIFValue(TiffTagConstants.TIFF_TAG_ORIENTATION)) ) {
+         xform.correctOrientation(size, v)
+       }
+       case _ ⇒
+     }
+
+     // Write:
+
+     for (
+         writer ← ImageIO.getImageWritersByMIMEType(mimeType).toList.headOption
+     ) yield {
+       val op = new AffineTransformOp(xform, AffineTransformOp.TYPE_NEAREST_NEIGHBOR)
+       val img = op.filter(sourceImage, null /*null means create the image for us*/)
+
+       dest.outputStream(StandardOpenOption.Create).acquireFor { out ⇒
+         val ios = ImageIO.createImageOutputStream(out)
+         writer.setOutput(ios)
+         writer.write(
+             /*metadata=*/null,
+             new IIOImage(img, /*thumbnails=*/null, /*imageMetaData=*/null),
+             writer.getDefaultWriteParam)
+         writer.dispose
+         ios.close
+       }
+
+       ImageSize(img.getWidth(), img.getHeight())
+
+     }
+
+
+  }
+
+
+
+
+
 }
 
