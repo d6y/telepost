@@ -13,8 +13,34 @@ import java.io.OutputStream
 import javax.imageio.IIOImage
 import scalax.io.OpenOption
 import scalax.io.StandardOpenOption
+import org.apache.sanselan.Sanselan
+import org.apache.sanselan.formats.jpeg.JpegImageMetadata
+import org.apache.sanselan.formats.tiff.constants.TiffTagConstants
+import org.apache.sanselan.formats.tiff.TiffField
 
 object ImageResizer {
+  
+  implicit def affineHelper(xform: AffineTransform) = new {
+    
+    // thank you: http://jpegclub.org/exif_orientation.html
+    val exifCodeToAngle = Map(
+        6 → 90,   // turn right
+        8 → 270,  // right left
+        3 → 180 	// flip
+    )
+    
+	  def correctOrientation(size: ImageSize, f: TiffField) = for (angle ← exifCodeToAngle.get(f.getIntValue) ) {
+	      val midx = size.width.toDouble / 2d
+        val midy = size.height.toDouble / 2d
+
+        if (angle == 90 || angle == 270) {
+           val dx: Double = midx - midy
+           xform.translate(-dx, dx)
+        }
+
+        xform.rotate(math.toRadians(angle), midx, midy)
+	  }
+	}
   
 	def scale(source: Path, mimeType: String, dest: Path, targetWidth: Int): Option[ImageSize] = {
 
@@ -25,6 +51,16 @@ object ImageResizer {
 	   val xform = new AffineTransform
 	   xform.scale(scale, scale)
 	   
+	   // Check to see if rotation is required
+	   Sanselan.getMetadata(source.inputStream.byteArray) match {
+		   case m: JpegImageMetadata ⇒ for ( v ← Option(m.findEXIFValue(TiffTagConstants.TIFF_TAG_ORIENTATION)) ) {
+		     xform.correctOrientation(size, v)
+		   }
+		   case _ ⇒ 
+		 }
+  
+	   // Write:
+		 
 	   for (
 	       writer ← ImageIO.getImageWritersByMIMEType(mimeType).toList.headOption
 	   ) yield {
@@ -46,9 +82,11 @@ object ImageResizer {
 	     
 	   }
 	   
-     
-	   
+
 	}
+	
+	
+	
 	
   
 }
