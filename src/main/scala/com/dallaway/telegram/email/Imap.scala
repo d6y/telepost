@@ -10,9 +10,7 @@ trait Imap {
       
       val n = inbox.getMessageCount
        
-      if (n == 0)
-        println("no msgs")
-      else
+      if (n > 0)
         for(i ← 1 to n) {
           val m = inbox.getMessage(i)
           try {
@@ -21,7 +19,6 @@ trait Imap {
           } catch {
             case x ⇒ x.printStackTrace
           }
-       
         } 
       
     }
@@ -45,7 +42,6 @@ trait Imap {
     	inbox.close(/*expurge=*/true)
     	store.close
   }
-    	   
 
     
   }
