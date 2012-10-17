@@ -17,9 +17,19 @@ import org.apache.sanselan.Sanselan
 import org.apache.sanselan.formats.jpeg.JpegImageMetadata
 import org.apache.sanselan.formats.tiff.constants.TiffTagConstants
 import org.apache.sanselan.formats.tiff.TiffField
+import javax.imageio.ImageWriteParam
+import javax.imageio.ImageWriter
 
 object ImageResizer {
 
+  def main(args: Array[String]) {
+    if (args.length != 2) println("Usage: ImageResizer in.jpg out.jpg")
+    else {
+      val (source,dest) = ( Path.fromString(args(0)), Path.fromString(args(1)) )
+      println(ImageResizer.scale(source, "image/jpeg", dest, 500))
+    }
+  }
+  
   implicit def affineHelper(xform: AffineTransform) = new {
 
     // thank you: http://jpegclub.org/exif_orientation.html
@@ -58,9 +68,8 @@ object ImageResizer {
        }
        case _ ⇒
      }
-
+     
      // Write:
-
      for (
          writer ← ImageIO.getImageWritersByMIMEType(mimeType).toList.headOption
      ) yield {
@@ -73,7 +82,7 @@ object ImageResizer {
          writer.write(
              /*metadata=*/null,
              new IIOImage(img, /*thumbnails=*/null, /*imageMetaData=*/null),
-             writer.getDefaultWriteParam)
+             paramsFor(writer))
          writer.dispose
          ios.close
        }
@@ -85,8 +94,17 @@ object ImageResizer {
 
   }
 
-
-
+  // Force high quality
+  private def paramsFor(writer: ImageWriter) : ImageWriteParam = {
+     val params = writer.getDefaultWriteParam
+     if (params.canWriteCompressed) {
+       params.setCompressionMode(ImageWriteParam.MODE_EXPLICIT)
+       params.setCompressionQuality(1f)
+     }
+     params
+  }
+  
+  
 
 
 }
