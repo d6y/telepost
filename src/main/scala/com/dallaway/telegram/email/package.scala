@@ -21,10 +21,6 @@ abstract class Attachment(path:String, mimeType:String) {
 
 case class ImageAttachment(fullUrlPath:String, inlineUrlPath: String, inlineSize: ImageSize, mineType:String) extends Attachment(fullUrlPath, mineType) {
   def toHtml =
-      <div>
-        <a href={fullUrlPath}>
-          <img src={inlineUrlPath} width={inlineSize.width.toString} height={inlineSize.height.toString} />
-        </a>
-      </div>
+      <div><a href={fullUrlPath}><img src={inlineUrlPath} width={inlineSize.width.toString} height={inlineSize.height.toString}/></a></div>
 }
 
