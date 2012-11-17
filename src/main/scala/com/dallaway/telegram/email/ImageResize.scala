@@ -1,27 +1,34 @@
 package com.dallaway.telegram.email
 
 import scalax.file.Path
-import java.awt.image.BufferedImage
-import java.awt.Toolkit
-import javax.swing.ImageIcon
-import java.awt.geom.AffineTransform
-import javax.imageio.ImageIO
-import scala.collection.JavaConversions._
-import java.awt.image.AffineTransformOp
 import scalax.io.Resource
-import java.io.OutputStream
-import javax.imageio.IIOImage
 import scalax.io.OpenOption
 import scalax.io.StandardOpenOption
+
+import java.io.OutputStream
+
+import javax.swing.ImageIcon
+
+import java.awt.image.BufferedImage
+import java.awt.Toolkit
+import java.awt.geom.AffineTransform
+import java.awt.image.AffineTransformOp
+
+import javax.imageio.ImageIO
+import javax.imageio.IIOImage
+import javax.imageio.ImageWriteParam
+import javax.imageio.ImageWriter
+
+import scala.collection.JavaConversions._
+
 import org.apache.sanselan.Sanselan
 import org.apache.sanselan.formats.jpeg.JpegImageMetadata
 import org.apache.sanselan.formats.tiff.constants.TiffTagConstants
 import org.apache.sanselan.formats.tiff.TiffField
-import javax.imageio.ImageWriteParam
-import javax.imageio.ImageWriter
 
 object ImageResizer {
 
+  /*
   def main(args: Array[String]) {
     if (args.length != 2) println("Usage: ImageResizer in.jpg out.jpg")
     else {
@@ -29,7 +36,8 @@ object ImageResizer {
       println(ImageResizer.scale(source, "image/jpeg", dest, 500))
     }
   }
-  
+  */
+
   implicit def affineHelper(xform: AffineTransform) = new {
 
     // thank you: http://jpegclub.org/exif_orientation.html
