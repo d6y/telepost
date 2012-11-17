@@ -42,6 +42,23 @@ object ImageResizer {
     }
   }
 
+  // Get the best parameter settings for this writer, which for me
+  // means no compromise on image quality
+  private def bestFor(writer: ImageWriter): ImageWriteParam = {
+      val params = writer.getDefaultWriteParam
+
+      if (params.canWriteProgressive)
+        params.setProgressiveMode(ImageWriteParam.MODE_DEFAULT)
+        
+      if (params.canWriteCompressed) {
+        // Not all image formats support compression/quality settings:
+        params.setCompressionMode(ImageWriteParam.MODE_EXPLICIT)
+        params.setCompressionQuality(1)
+      }
+
+        params
+  }
+
   def scale(source: Path, mimeType: String, dest: Path, targetWidth: Int): Option[ImageSize] = {
 
      val sourceImage = source.inputStream.acquireAndGet(ImageIO.read)
@@ -73,12 +90,12 @@ object ImageResizer {
          writer.write(
              /*metadata=*/null,
              new IIOImage(img, /*thumbnails=*/null, /*imageMetaData=*/null),
-             writer.getDefaultWriteParam)
+             /*params=*/bestFor(writer))
          writer.dispose
          ios.close
        }
 
-       ImageSize(img.getWidth(), img.getHeight())
+       ImageSize(img.getWidth, img.getHeight
 
      }
 
