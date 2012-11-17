@@ -17,9 +17,19 @@ import org.apache.sanselan.Sanselan
 import org.apache.sanselan.formats.jpeg.JpegImageMetadata
 import org.apache.sanselan.formats.tiff.constants.TiffTagConstants
 import org.apache.sanselan.formats.tiff.TiffField
+import javax.imageio.ImageWriteParam
+import javax.imageio.ImageWriter
 
 object ImageResizer {
 
+  def main(args: Array[String]) {
+    if (args.length != 2) println("Usage: ImageResizer in.jpg out.jpg")
+    else {
+      val (source,dest) = ( Path.fromString(args(0)), Path.fromString(args(1)) )
+      println(ImageResizer.scale(source, "image/jpeg", dest, 500))
+    }
+  }
+  
   implicit def affineHelper(xform: AffineTransform) = new {
 
     // thank you: http://jpegclub.org/exif_orientation.html
@@ -42,8 +52,6 @@ object ImageResizer {
     }
   }
 
-  // Get the best parameter settings for this writer, which for me
-  // means no compromise on image quality
   private def bestFor(writer: ImageWriter): ImageWriteParam = {
       val params = writer.getDefaultWriteParam
 
@@ -75,9 +83,8 @@ object ImageResizer {
        }
        case _ ⇒
      }
-
+     
      // Write:
-
      for (
          writer ← ImageIO.getImageWritersByMIMEType(mimeType).toList.headOption
      ) yield {
@@ -95,15 +102,15 @@ object ImageResizer {
          ios.close
        }
 
-       ImageSize(img.getWidth, img.getHeight
+       ImageSize(img.getWidth, img.getHeight)
 
      }
 
 
   }
 
-
-
+ 
+  
 
 
 }
