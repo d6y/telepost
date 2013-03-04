@@ -4,20 +4,20 @@ import javax.mail._
 
 trait Imap {
 
-  def checkMail(login: Credentials)(handler: javax.mail.Message ⇒ Unit): Unit = {
+  def checkMail(login: Credentials)(handler: javax.mail.Message => Unit): Unit = {
 
-    withInbox { inbox ⇒
+    withInbox { inbox =>
 
       val n = inbox.getMessageCount
 
       if (n > 0)
-        for(i ← 1 to n) {
+        for(i <- 1 to n) {
           val m = inbox.getMessage(i)
           try {
             handler(m)
             m.setFlag(Flags.Flag.DELETED, true) // archive successfully processed messages
           } catch {
-            case x ⇒ x.printStackTrace
+            case x : Throwable => x.printStackTrace
           }
         }
 

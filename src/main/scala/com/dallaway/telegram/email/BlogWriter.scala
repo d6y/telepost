@@ -1,8 +1,6 @@
 package com.dallaway.telegram.email
 
 import java.text.SimpleDateFormat
-import scalax.io._
-import Resource._
 import scalax.file.Path
 
 trait BlogWriter {
@@ -12,7 +10,6 @@ trait BlogWriter {
   def blog(postsDir: Path)(email: EmailInfo): BlogFilename = {
 
     val attachments = email.atttachments.map(_.toHtml).mkString
-
 
     val dash = new SimpleDateFormat("yyyy-MM-dd").format(email.sentDate)
 

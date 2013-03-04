@@ -1,6 +1,4 @@
-import scalax.io._
 
-import Resource._
 import scalax.file.Path
 
 import com.dallaway.telegram.email._
@@ -22,7 +20,7 @@ object Main extends App with Imap with EmailWriter with BlogWriter {
   
   val telegram = save andThen mkblog
   
-  checkMail(emailLogin) { email ⇒ telegram(email) }
+  checkMail(emailLogin) { email => telegram(email) }
  
   
 

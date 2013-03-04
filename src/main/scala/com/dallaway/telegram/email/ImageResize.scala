@@ -1,16 +1,9 @@
 package com.dallaway.telegram.email
 
 import scalax.file.Path
-import scalax.io.Resource
-import scalax.io.OpenOption
 import scalax.io.StandardOpenOption
 
-import java.io.OutputStream
 
-import javax.swing.ImageIcon
-
-import java.awt.image.BufferedImage
-import java.awt.Toolkit
 import java.awt.geom.AffineTransform
 import java.awt.image.AffineTransformOp
 
@@ -42,12 +35,12 @@ object ImageResizer {
 
     // thank you: http://jpegclub.org/exif_orientation.html
     val exifCodeToAngle = Map(
-        6 → 90,   // turn right
-        8 → 270,  // right left
-        3 → 180 	// flip
+        6 -> 90,   // turn right
+        8 -> 270,  // right left
+        3 -> 180 	 // flip
     )
 
-    def correctOrientation(size: ImageSize, f: TiffField) = for (angle ← exifCodeToAngle.get(f.getIntValue) ) {
+    def correctOrientation(size: ImageSize, f: TiffField) = for (angle <- exifCodeToAngle.get(f.getIntValue) ) {
         val midx = size.width.toDouble / 2d
         val midy = size.height.toDouble / 2d
 
@@ -86,20 +79,20 @@ object ImageResizer {
 
      // Check to see if rotation is required
      Sanselan.getMetadata(source.inputStream.byteArray) match {
-       case m: JpegImageMetadata ⇒ for ( v ← Option(m.findEXIFValue(TiffTagConstants.TIFF_TAG_ORIENTATION)) ) {
+       case m: JpegImageMetadata => for ( v <- Option(m.findEXIFValue(TiffTagConstants.TIFF_TAG_ORIENTATION)) ) {
          xform.correctOrientation(size, v)
        }
-       case _ ⇒
+       case _ =>
      }
      
      // Write:
      for (
-         writer ← ImageIO.getImageWritersByMIMEType(mimeType).toList.headOption
+         writer <- ImageIO.getImageWritersByMIMEType(mimeType).toList.headOption
      ) yield {
        val op = new AffineTransformOp(xform, AffineTransformOp.TYPE_NEAREST_NEIGHBOR)
        val img = op.filter(sourceImage, null /*null means create the image for us*/)
 
-       dest.outputStream(StandardOpenOption.Create).acquireFor { out ⇒
+       dest.outputStream(StandardOpenOption.Create).acquireFor { out =>
          val ios = ImageIO.createImageOutputStream(out)
          writer.setOutput(ios)
          writer.write(
