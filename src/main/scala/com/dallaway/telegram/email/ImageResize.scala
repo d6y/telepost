@@ -4,8 +4,7 @@ import scalax.file.Path
 import scalax.io.StandardOpenOption
 
 
-import java.awt.geom.AffineTransform
-import java.awt.image.AffineTransformOp
+import java.awt.image.BufferedImage
 
 import javax.imageio.ImageIO
 import javax.imageio.IIOImage
@@ -17,7 +16,7 @@ import scala.collection.JavaConversions._
 import org.apache.sanselan.Sanselan
 import org.apache.sanselan.formats.jpeg.JpegImageMetadata
 import org.apache.sanselan.formats.tiff.constants.TiffTagConstants
-import org.apache.sanselan.formats.tiff.TiffField
+import org.imgscalr.Scalr
 
 object ImageResizer {
 
@@ -31,88 +30,71 @@ object ImageResizer {
   }
 
 
-  implicit def affineHelper(xform: AffineTransform) = new {
+  // Pimp JpegImageMetadata to add a rotation check
+  implicit class RichMeta(meta: JpegImageMetadata) {
 
     // thank you: http://jpegclub.org/exif_orientation.html
     val exifCodeToAngle = Map(
-        6 -> 90,   // turn right
-        8 -> 270,  // right left
-        3 -> 180 	 // flip
+      6 -> Scalr.Rotation.CW_90,   // turn right
+      8 -> Scalr.Rotation.CW_270,  // right left
+      3 -> Scalr.Rotation.CW_180 	 // flip
     )
 
-    def correctOrientation(size: ImageSize, f: TiffField) = for (angle <- exifCodeToAngle.get(f.getIntValue) ) {
-        val midx = size.width.toDouble / 2d
-        val midy = size.height.toDouble / 2d
+    def checkRotation(in: BufferedImage) : Option[BufferedImage] =
+      for {
+        v <- Option(meta findEXIFValue TiffTagConstants.TIFF_TAG_ORIENTATION)
+        angle <- (exifCodeToAngle get v.getIntValue)
+      } yield Scalr.rotate(in, angle)
 
-        if (angle == 90 || angle == 270) {
-           val dx: Double = midx - midy
-           xform.translate(-dx, dx)
-        }
-
-        xform.rotate(math.toRadians(angle), midx, midy)
-    }
-  }
-
-  private def bestFor(writer: ImageWriter): ImageWriteParam = {
-      val params = writer.getDefaultWriteParam
-
-      if (params.canWriteProgressive)
-        params.setProgressiveMode(ImageWriteParam.MODE_DEFAULT)
-        
-      if (params.canWriteCompressed) {
-        // Not all image formats support compression/quality settings:
-        params.setCompressionMode(ImageWriteParam.MODE_EXPLICIT)
-        params.setCompressionQuality(1)
-      }
-
-        params
   }
 
   def scale(source: Path, mimeType: String, dest: Path, targetWidth: Int): Option[ImageSize] = {
 
-     val sourceImage = source.inputStream.acquireAndGet(ImageIO.read)
-     val size = ImageSize(sourceImage.getWidth(null), sourceImage.getHeight(null))
-     val scale: Double = targetWidth.toDouble / size.width.toDouble
+    val sourceImage = source.inputStream.acquireAndGet(ImageIO.read)
 
-     val xform = new AffineTransform
-     xform.scale(scale, scale)
+    // Check to see if rotation is required
+    val toScale : BufferedImage =
+      Sanselan.getMetadata(source.inputStream.byteArray) match {
+        case m: JpegImageMetadata => m.checkRotation(sourceImage) getOrElse sourceImage
+        case _ => sourceImage
+      }
 
-     // Check to see if rotation is required
-     Sanselan.getMetadata(source.inputStream.byteArray) match {
-       case m: JpegImageMetadata => for ( v <- Option(m.findEXIFValue(TiffTagConstants.TIFF_TAG_ORIENTATION)) ) {
-         xform.correctOrientation(size, v)
-       }
-       case _ =>
-     }
-     
-     // Write:
-     for (
-         writer <- ImageIO.getImageWritersByMIMEType(mimeType).toList.headOption
-     ) yield {
-       val op = new AffineTransformOp(xform, AffineTransformOp.TYPE_NEAREST_NEIGHBOR)
-       val img = op.filter(sourceImage, null /*null means create the image for us*/)
-
-       dest.outputStream(StandardOpenOption.Create).acquireFor { out =>
-         val ios = ImageIO.createImageOutputStream(out)
-         writer.setOutput(ios)
-         writer.write(
-             /*metadata=*/null,
-             new IIOImage(img, /*thumbnails=*/null, /*imageMetaData=*/null),
-             /*params=*/bestFor(writer))
-         writer.dispose
-         ios.close
-       }
-
-       ImageSize(img.getWidth, img.getHeight)
-
-     }
-
+    // Scale and write:
+    val img = Scalr.resize(toScale, Scalr.Method.ULTRA_QUALITY, Scalr.Mode.FIT_TO_WIDTH, targetWidth, Scalr.OP_BRIGHTER)
+    write(img, mimeType, dest)
 
   }
 
- 
-  
+  private def write(img: BufferedImage, mimeType: String, dest: Path) : Option[ImageSize] =
+    for ( writer <- ImageIO.getImageWritersByMIMEType(mimeType).toList.headOption) yield {
+      dest.outputStream(StandardOpenOption.Create).acquireFor { out =>
+        val ios = ImageIO.createImageOutputStream(out)
+        writer.setOutput(ios)
+        writer.write(
+          /*metadata=*/null,
+          new IIOImage(img, /*thumbnails=*/null, /*imageMetaData=*/null),
+          /*params=*/bestFor(writer))
+        writer.dispose
+        ios.close
+      }
 
+      ImageSize(img.getWidth, img.getHeight)
+    }
+
+  private def bestFor(writer: ImageWriter): ImageWriteParam = {
+    val params = writer.getDefaultWriteParam
+
+    if (params.canWriteProgressive)
+      params.setProgressiveMode(ImageWriteParam.MODE_DEFAULT)
+
+    if (params.canWriteCompressed) {
+      // Not all image formats support compression/quality settings:
+      params.setCompressionMode(ImageWriteParam.MODE_EXPLICIT)
+      params.setCompressionQuality(1)
+    }
+
+    params
+  }
 
 }
 

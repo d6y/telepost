@@ -6,6 +6,7 @@ libraryDependencies ++= Seq(
   "com.github.scala-incubator.io" %% "scala-io-core" % "0.4.2",
   "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.2",
   "javax.mail" % "mail" % "1.4",
+  "org.imgscalr" % "imgscalr-lib" % "4.2",
   "org.apache.sanselan" % "sanselan" % "0.97-incubator"
 )
 
