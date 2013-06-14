@@ -7,12 +7,12 @@ How use use
 -----------
 
     sbt "run /path/to/my/blog me@example.org mypassw0rd"
-    
+
 This will connect to the me@example.org google email account, process emails, and write images to /path/to/my/blog/media and blog posts to /path/to/my/blog/_posts
 
 The subject is used as the title of the blog post and the filename.
 
-It will then delete the email (archive it). 
+It will then delete the email (archive it).
 
 
 Serving suggestion
@@ -25,13 +25,13 @@ Known issues
 ------------
 
 * Images must be written to `/media/` on your blog
-* Only does JPEGs 
+* Only does JPEGs
 * Doesn't do video or sound files
 
 Prerequisites
 -------------
 
-* SBT 0.11.3
+* SBT 0.11
 * Java (should work with 1.5; tested with 1.7)
 * Probably needs to be a Sun JVM
 

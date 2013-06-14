@@ -21,7 +21,7 @@ import org.apache.sanselan.formats.tiff.TiffField
 
 object ImageResizer {
 
-  /*
+
   def main(args: Array[String]) {
     if (args.length != 2) println("Usage: ImageResizer in.jpg out.jpg")
     else {
@@ -29,7 +29,7 @@ object ImageResizer {
       println(ImageResizer.scale(source, "image/jpeg", dest, 500))
     }
   }
-  */
+
 
   implicit def affineHelper(xform: AffineTransform) = new {
 
