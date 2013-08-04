@@ -96,6 +96,9 @@ trait EmailWriter {
   // Remove unhelpful characters from the attachment filename.
   private def cleanName(in: String) = "tp_" + in.replace(' ', '_').replaceAllButLast('.', '_')
 
+  // Convention for the thumbnail filename:
+  private def thumbName(cleanName: String) = cleanName.replaceFirst("tp_", "tp_thumb_")
+
   // Save one attachment to disk at full-size, and one scaled to width of 500px.
   private def savedAttachment(mediaDir: Path, in: =>InputStream, mimeType: String, fileName: String) : Option[Attachment] = {
 
@@ -105,12 +108,11 @@ trait EmailWriter {
 
     // - Scaled version to show inline the blog:
     val width = 500
-    val inlineImgName = dest.name + width.toString + dest.name.split("\\.").last
-    val inlineFile = mediaDir / inlineImgName
+    val inlineFile = mediaDir / thumbName(dest.name)
 
       for ( inlineSize <- ImageResizer.scale(dest, mimeType, inlineFile, width) )
       yield
-        ImageAttachment("/media/"+dest.name, "/media/"+inlineImgName, inlineSize, mimeType)
+        ImageAttachment("/media/"+dest.name, "/media/"+inlineFile.name, inlineSize, mimeType)
 
   }
 
