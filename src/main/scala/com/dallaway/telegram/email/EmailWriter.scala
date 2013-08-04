@@ -14,6 +14,8 @@ import javax.mail._
 import javax.mail.internet._
 import java.io.InputStream
 
+import scala.language.postfixOps
+
 trait EmailWriter {
 
   // **Entry point**:
@@ -25,7 +27,8 @@ trait EmailWriter {
       Option(m.getSubject),
       body(m),
       m.getSentDate,
-      for ( a <- attachments(mediaDir, m) ) yield a )
+      for ( a <- attachments(mediaDir, m) ) yield a
+    )
 
 
   // Prevent over-writing of a file by ensuring a Path is unique.
