@@ -1,7 +1,7 @@
 package com.dallaway.telegram.email
 
-import java.text.SimpleDateFormat
 import scalax.file.Path
+import java.text.SimpleDateFormat
 
 trait BlogWriter {
 
@@ -9,29 +9,28 @@ trait BlogWriter {
 
   def blog(postsDir: Path)(email: EmailInfo): BlogFilename = {
 
-    val attachments = email.atttachments.map(_.toHtml).mkString
+    val attachments = email.attachments.map(_.toHtml).mkString
 
-    val dash = new SimpleDateFormat("yyyy-MM-dd").format(email.sentDate)
+    val dateTime = new SimpleDateFormat("yyyy-MM-dd HH:mm").format(email.sentDate)
+    val date = new SimpleDateFormat("yyyy-MM-dd").format(email.sentDate)
 
-    val blog = """
-    |title: %s
-    |author: %s
-    |date: %s
-    |
-    |%s
-    |
-    |%s
-    """.stripMargin.format (
-        email.subject, email.sender, dash, attachments, email.body)
+    val blog =
+      """
+        |title: %s
+        |author: %s
+        |date: %s
+        |
+        |%s
+        |
+        |%s
+      """.stripMargin.format (
+        email.title, email.sender, dateTime, attachments, email.body)
 
-    val filename = dash + "-" + Hoisted.slugify(email.subject) + ".md"
+    val filename = date + "-" + Hoisted.slugify(email.title) + ".md"
 
     (postsDir / filename).write(blog)
 
     filename
-
   }
-
-
 
 }

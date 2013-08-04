@@ -5,13 +5,15 @@ import scala.xml.NodeSeq
 case class Credentials(username:String, password:String, host:String = "imap.gmail.com")
 
 case class EmailInfo(
-    sender:String,
-    subject:String,
-    body:String,
-    sentDate:java.util.Date,
-    atttachments:Seq[Attachment])
+    sender: String,
+    subject: Option[String],
+    body: String,
+    sentDate: java.util.Date,
+    attachments: Seq[Attachment]) {
 
+  lazy val title = subject getOrElse body
 
+}
 
 case class ImageSize(width: Int, height: Int)
 
