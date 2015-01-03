@@ -19,11 +19,12 @@ trait BlogWriter {
          |title: %s
          |author: %s
          |date: %s
-         |
-         |%s
-         |
-         |%s
+         |layout: post
          |---
+         |
+         |%s
+         |
+         |%s
       """.stripMargin.format (
         email.title, email.sender, dateTime, attachments, email.body)
 
