@@ -20,6 +20,7 @@ trait BlogWriter {
          |author: %s
          |date: %s
          |layout: post
+         |comments: true
          |---
          |
          |%s
