@@ -4,7 +4,30 @@ import javax.mail._
 
 trait Imap {
 
-  def checkMail(login: Credentials)(handler: javax.mail.Message => Unit): Unit = {
+  // Apply handler to each email found, returning the number of emails found
+  def checkMail(login: Credentials)(handler: javax.mail.Message => Unit): Int = {
+
+    def withInbox[T](f: javax.mail.Folder ⇒ T) : T = {
+      val props = new java.util.Properties
+      props.put("mail.store.protocol", "imaps")
+
+      val session = Session.getDefaultInstance(props)
+      session.setDebug(false)
+
+      val store = session.getStore
+      store.connect(login.host, login.username, login.password)
+
+      val inbox = store.getFolder("INBOX")
+      inbox.open(Folder.READ_WRITE)
+
+      val result = f(inbox)
+
+      inbox.close(/*expurge=*/true)
+      store.close()
+
+      result
+    }
+
 
     withInbox { inbox =>
 
@@ -17,32 +40,12 @@ trait Imap {
             handler(m)
             m.setFlag(Flags.Flag.DELETED, true) // archive successfully processed messages
           } catch {
-            case x : Throwable => x.printStackTrace
+            case x : Throwable => x.printStackTrace()
           }
         }
 
+       n
     }
-
-
-    def withInbox(f: javax.mail.Folder ⇒ Unit) : Unit = {
-      val props = new java.util.Properties
-      props.put("mail.store.protocol", "imaps")
-
-      val session = Session.getDefaultInstance(props)
-      session.setDebug(false)
-
-      val store = session.getStore()
-      store.connect(login.host, login.username, login.password)
-
-      val inbox = store.getFolder("INBOX")
-      inbox.open(Folder.READ_WRITE)
-
-      f(inbox)
-
-      inbox.close(/*expurge=*/true)
-      store.close
-  }
-
 
   }
 

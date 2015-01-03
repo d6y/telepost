@@ -3,9 +3,7 @@ package com.dallaway.telegram.email
 import scalax.file.Path
 import scalax.io.StandardOpenOption
 
-
 import java.awt.image.BufferedImage
-
 import javax.imageio.ImageIO
 import javax.imageio.IIOImage
 import javax.imageio.ImageWriteParam
@@ -20,7 +18,6 @@ import org.imgscalr.Scalr
 
 object ImageResizer {
 
-
   def main(args: Array[String]) {
     if (args.length != 2) println("Usage: ImageResizer in.jpg out.jpg")
     else {
@@ -28,7 +25,6 @@ object ImageResizer {
       println(ImageResizer.scale(source, "image/jpeg", dest, 500))
     }
   }
-
 
   // Pimp JpegImageMetadata to add a rotation check
   implicit class RichMeta(meta: JpegImageMetadata) {
@@ -43,18 +39,18 @@ object ImageResizer {
     def checkRotation(in: BufferedImage) : Option[BufferedImage] =
       for {
         v <- Option(meta findEXIFValue TiffTagConstants.TIFF_TAG_ORIENTATION)
-        angle <- (exifCodeToAngle get v.getIntValue)
+        angle <- exifCodeToAngle.get(v.getIntValue)
       } yield Scalr.rotate(in, angle)
 
   }
 
   def scale(source: Path, mimeType: String, dest: Path, targetWidth: Int): Option[ImageSize] = {
 
-    val sourceImage = source.inputStream.acquireAndGet(ImageIO.read)
+    val sourceImage = source.inputStream().acquireAndGet(ImageIO.read)
 
     // Check to see if rotation is required
     val toScale : BufferedImage =
-      Sanselan.getMetadata(source.inputStream.byteArray) match {
+      Sanselan.getMetadata(source.inputStream().byteArray) match {
         case m: JpegImageMetadata => m.checkRotation(sourceImage) getOrElse sourceImage
         case _ => sourceImage
       }
@@ -74,8 +70,8 @@ object ImageResizer {
           /*metadata=*/null,
           new IIOImage(img, /*thumbnails=*/null, /*imageMetaData=*/null),
           /*params=*/bestFor(writer))
-        writer.dispose
-        ios.close
+        writer.dispose()
+        ios.close()
       }
 
       ImageSize(img.getWidth, img.getHeight)
@@ -97,4 +93,3 @@ object ImageResizer {
   }
 
 }
-

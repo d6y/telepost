@@ -1,7 +1,7 @@
 Telepost
 ========
 
-Reads an IMAP email account and writes JPEG attachments to the file system and creates a Markdown file for Telegr.am.
+Reads an IMAP email account and writes JPEG attachments to the file system and creates a Markdown file for Telegr.am or Jekyll.
 
 How use use
 -----------

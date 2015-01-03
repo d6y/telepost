@@ -15,14 +15,15 @@ trait BlogWriter {
     val date = new SimpleDateFormat("yyyy-MM-dd").format(email.sentDate)
 
     val blog =
-      """
-        |title: %s
-        |author: %s
-        |date: %s
-        |
-        |%s
-        |
-        |%s
+      """|---
+         |title: %s
+         |author: %s
+         |date: %s
+         |
+         |%s
+         |
+         |%s
+         |---
       """.stripMargin.format (
         email.title, email.sender, dateTime, attachments, email.body)
 
@@ -32,5 +33,4 @@ trait BlogWriter {
 
     filename
   }
-
 }

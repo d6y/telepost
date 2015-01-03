@@ -12,7 +12,7 @@ libraryDependencies ++= Seq(
 
 mainClass := Some("Main")
 
-scalaVersion := "2.10.2"
+scalaVersion := "2.10.3"
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
 

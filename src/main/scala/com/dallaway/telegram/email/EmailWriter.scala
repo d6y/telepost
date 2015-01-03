@@ -43,8 +43,8 @@ trait EmailWriter {
 
   // The sender (ideally, their real name).
   private def sender(m: javax.mail.Message): String = m.getFrom().head match {
-    case a: InternetAddress => a.getPersonal
-    case a => a.toString
+    case a: InternetAddress => a.getPersonal()
+    case a => a.toString()
   }
 
   // All the parts of the message.
@@ -86,7 +86,7 @@ trait EmailWriter {
   // Utility to replace all but the lass occurrence of a character. E.g., for "2013.10.12.jpg" -> "2013_10_12.jpg"
   implicit class StringHelper(in: String) {
     def replaceAllButLast(source: Char, dest: Char) : String = {
-      (in lastIndexOf source) match {
+      in.lastIndexOf(source) match {
         case -1 => in
         case n => in.substring(0,n).replace(source,dest) + in.substring(n)
       }

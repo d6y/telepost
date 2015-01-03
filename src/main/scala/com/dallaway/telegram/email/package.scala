@@ -25,4 +25,3 @@ case class ImageAttachment(fullUrlPath:String, inlineUrlPath: String, inlineSize
   def toHtml =
       <div><a href={fullUrlPath}><img src={inlineUrlPath} width={inlineSize.width.toString} height={inlineSize.height.toString}/></a></div>
 }
-
