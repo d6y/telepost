@@ -36,12 +36,11 @@ object ImageResizer {
       3 -> Scalr.Rotation.CW_180 	 // flip
     )
 
-    def checkRotation(in: BufferedImage) : Option[BufferedImage] =
+    def checkRotation(in: BufferedImage): Option[BufferedImage] =
       for {
-        v <- Option(meta findEXIFValue TiffTagConstants.TIFF_TAG_ORIENTATION)
+        v     <- Option(meta findEXIFValue TiffTagConstants.TIFF_TAG_ORIENTATION)
         angle <- exifCodeToAngle.get(v.getIntValue)
       } yield Scalr.rotate(in, angle)
-
   }
 
   def scale(source: Path, mimeType: String, dest: Path, targetWidth: Int): Option[ImageSize] = {
@@ -49,7 +48,7 @@ object ImageResizer {
     val sourceImage = source.inputStream().acquireAndGet(ImageIO.read)
 
     // Check to see if rotation is required
-    val toScale : BufferedImage =
+    val toScale: BufferedImage =
       Sanselan.getMetadata(source.inputStream().byteArray) match {
         case m: JpegImageMetadata => m.checkRotation(sourceImage) getOrElse sourceImage
         case _ => sourceImage
@@ -58,10 +57,9 @@ object ImageResizer {
     // Scale and write:
     val img = Scalr.resize(toScale, Scalr.Method.ULTRA_QUALITY, Scalr.Mode.FIT_TO_WIDTH, targetWidth, Scalr.OP_BRIGHTER)
     write(img, mimeType, dest)
-
   }
 
-  private def write(img: BufferedImage, mimeType: String, dest: Path) : Option[ImageSize] =
+  private def write(img: BufferedImage, mimeType: String, dest: Path): Option[ImageSize] =
     for ( writer <- ImageIO.getImageWritersByMIMEType(mimeType).toList.headOption) yield {
       dest.outputStream(StandardOpenOption.Create).acquireFor { out =>
         val ios = ImageIO.createImageOutputStream(out)
