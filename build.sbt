@@ -10,6 +10,10 @@ libraryDependencies ++= Seq(
   "org.apache.sanselan" % "sanselan" % "0.97-incubator"
 )
 
+// http://www.scala-sbt.org/0.13/docs/Forking.html
+
+fork := true
+
 mainClass := Some("Main")
 
 scalaVersion := "2.10.3"
