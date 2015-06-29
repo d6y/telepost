@@ -16,7 +16,8 @@ trait BlogWriter {
 
     val blog =
       """|---
-         |title: %s
+         |title: |
+         |  %s
          |author: %s
          |date: %s
          |layout: post
