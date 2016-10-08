@@ -17,7 +17,7 @@ The main method expects the following arguments:
 
 For example:
 
-    sbt "run blog/_posts /tmp/ me@example.org mypassw0rd images.bucket xxx yyy"
+    sbt "runMain Main blog/_posts me@example.org mypassw0rd images.bucket xxx yyy"
 
 The subject is used as the title of the blog post and the filename.
 

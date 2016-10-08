@@ -61,7 +61,7 @@ trait EmailWriter {
   }
 
   // Locate and extract each attachment in the email:
-  private def attachments(mediaDir: Path, m: Part, meta: EmailMeta) : Seq[Attachment] = m.getContent match {
+  private def attachments(mediaDir: Path, m: Part, meta: EmailMeta) : Seq[ImageAttachment] = m.getContent match {
 
     // * A body part attachment
     case p: MimeMultipart => for {
@@ -86,7 +86,7 @@ trait EmailWriter {
     in       : =>InputStream,
     mimeType : String,
     fileName : Clean
-  ): Option[Attachment] = {
+  ): Option[ImageAttachment] = {
 
     // - Save original image (to link to):
     val dest = mediaDir / fileName.fullName

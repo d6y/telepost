@@ -15,21 +15,17 @@ case class EmailMeta(
 case class EmailInfo(
   meta        : EmailMeta,
   body        : String,
-  attachments : Seq[Attachment]
+  attachments : Seq[ImageAttachment]
 )
 
 case class ImageSize(width: Int, height: Int)
-
-abstract class Attachment(path: String, mimeType: String) {
-  def toHtml: NodeSeq
-}
 
 case class ImageAttachment(
   fullUrlPath   : String,
   inlineUrlPath : String,
   inlineSize    : ImageSize,
   mineType      : String
-) extends Attachment(fullUrlPath, mineType) {
+) {
   def toHtml =
       <div>
         <a href={fullUrlPath}>
