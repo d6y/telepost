@@ -5,7 +5,7 @@ import javax.mail._
 trait Imap {
 
   // Apply handler to each email found, returning the number of emails found
-  def checkMail(login: Credentials)(handler: javax.mail.Message => Unit): Int = {
+  def checkMail(login: ImapCredentials)(handler: javax.mail.Message => Unit): Int = {
 
     def withInbox[T](f: javax.mail.Folder ⇒ T) : T = {
       val props = new java.util.Properties

@@ -6,9 +6,18 @@ Reads an IMAP email account and writes JPEG attachments to the file system and c
 How use use
 -----------
 
-    sbt "run /path/to/my/blog me@example.org mypassw0rd"
+The main method expects the following arguments:
 
-This will connect to the me@example.org google email account, process emails, and write images to /path/to/my/blog/media and blog posts to /path/to/my/blog/_posts
+- path to write the markdown blog post to
+- Google email adrress
+- Address password
+- S3 bucket name
+- S3 key
+- S3 secret
+
+For example:
+
+    sbt "runMain Main blog/_posts me@example.org mypassw0rd images.bucket xxx yyy"
 
 The subject is used as the title of the blog post and the filename.
 
@@ -24,17 +33,9 @@ Run via cron, and wrapper in a script that either commits and pushes to your Git
 Known issues
 ------------
 
-* Images must be written to `/media/` on your blog
 * Only does JPEGs
 * Doesn't do video or sound files
-
-Prerequisites
--------------
-
-* SBT 0.11
-* Java (should work with 1.5; tested with 1.7)
 * Probably needs to be a Sun JVM
-
 
 License
 =======
