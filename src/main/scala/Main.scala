@@ -38,13 +38,15 @@ object Main extends Imap with EmailWriter with BlogWriter {
         extractContent(email).map(mkblog) match {
           case Success(info) => 
             println(s"Processed: $info")
-            System.exit(0)
           case Failure(err)  => 
             println(s"Failure processing ${email.getSubject} into $mediadir")
             err.printStackTrace()
-            System.exit(1)
         }
       }
+
+      // By convention, exit codes of zero indicate success, but we're
+      // returning the number of messages seen. So zero would mean "did nothing", and 1 would mean "saw an email".
+      System.exit(numEmails)
 
     case _ => println("Usage: Main posts-dir email password bucket s3-key s3-secret")
   }
