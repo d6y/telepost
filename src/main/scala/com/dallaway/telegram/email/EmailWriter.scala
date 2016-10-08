@@ -21,24 +21,20 @@ trait EmailWriter {
   // **Entry point**:
   // Writes out the image attachments found in an email to the file system.
   // Returns the details about the email content and  where to find the attachments.
-  def write(mediaDir: Path)(m: Message): EmailInfo =
-    EmailInfo(
-      sender(m),
-      Option(m.getSubject),
-      body(m),
-      m.getSentDate,
-      for ( a <- attachments(mediaDir, m) ) yield a
-    )
+  def write(mediaDir: Path)(m: Message): EmailInfo = {
 
+  val bodyText = body(m)
 
-  // Prevent over-writing of a file by ensuring a Path is unique.
-  implicit class PathHelper(path: Path) {
-    def ensureUnique = uniquely(path)
-    private def randomChar = scala.util.Random.shuffle('A' to 'Z' toSeq).head
-    private def uniquely(path: Path): Path = path match {
-      case Exists(p) => uniquely { Path(p.segments.init:_*) / (randomChar + p.name) }
-      case _ => path
-    }
+  val meta = EmailMeta(
+    sender(m),
+    m.getSentDate,
+    Option(m.getSubject) getOrElse bodyText
+  )
+
+  EmailInfo(
+    meta,
+    bodyText,
+    for ( a <- attachments(mediaDir, m, meta) ) yield a)
   }
 
   // The sender (ideally, their real name).
@@ -65,56 +61,44 @@ trait EmailWriter {
   }
 
   // Locate and extract each attachment in the email:
-  private def attachments(mediaDir: Path, m: Part) : Seq[Attachment] = m.getContent match {
+  private def attachments(mediaDir: Path, m: Part, meta: EmailMeta) : Seq[Attachment] = m.getContent match {
 
     // * A body part attachment
     case p: MimeMultipart => for {
       i <- 0 until p.getCount
-      b = p.getBodyPart(i)
+      b  = p.getBodyPart(i)
       if b.getDisposition != null
-      a <- savedAttachment(mediaDir, b.getInputStream, b.mimeType, b.getFileName)
+      a <- savedAttachment(mediaDir, b.getInputStream, b.mimeType, Clean(b.getFileName ,meta))
     } yield a
 
 
     // * Inline content
-    case s: InputStream => savedAttachment(mediaDir, s, m.mimeType, m.getFileName).toList
+    case s: InputStream => savedAttachment(mediaDir, s, m.mimeType, Clean(m.getFileName, meta)).toList
 
     // * Content we don't need to handle
     case otherwise => println("Found a "+otherwise); Nil
   }
 
-  // Utility to replace all but the lass occurrence of a character. E.g., for "2013.10.12.jpg" -> "2013_10_12.jpg"
-  implicit class StringHelper(in: String) {
-    def replaceAllButLast(source: Char, dest: Char) : String = {
-      in.lastIndexOf(source) match {
-        case -1 => in
-        case n => in.substring(0,n).replace(source,dest) + in.substring(n)
-      }
-    }
-  }
-
-  // Remove unhelpful characters from the attachment filename.
-  private def cleanName(in: String) = "tp_" + in.replace(' ', '_').replaceAllButLast('.', '_')
-
-  // Convention for the thumbnail filename:
-  private def thumbName(cleanName: String) = cleanName.replaceFirst("tp_", "tp_thumb_")
 
   // Save one attachment to disk at full-size, and one scaled to width of 500px.
-  private def savedAttachment(mediaDir: Path, in: =>InputStream, mimeType: String, fileName: String) : Option[Attachment] = {
+  private def savedAttachment(
+    mediaDir : Path,
+    in       : =>InputStream,
+    mimeType : String,
+    fileName : Clean
+  ): Option[Attachment] = {
 
     // - Save original image (to link to):
-    val dest = (mediaDir / cleanName(fileName)).ensureUnique
+    val dest = mediaDir / fileName.fullName
     dest.write(fromInputStream(in).bytes)
 
     // - Scaled version to show inline the blog:
     val width = 500
-    val inlineFile = mediaDir / thumbName(dest.name)
+    val inlineFile = mediaDir / fileName.thumbName
 
       for ( inlineSize <- ImageResizer.scale(dest, mimeType, inlineFile, width) )
       yield
-        ImageAttachment("/media/"+dest.name, "/media/"+inlineFile.name, inlineSize, mimeType)
-
+        ImageAttachment(dest.name, inlineFile.name, inlineSize, mimeType)
   }
-
 
 }

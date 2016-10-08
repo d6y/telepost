@@ -3,27 +3,37 @@ import scalax.file.Path
 
 import com.dallaway.telegram.email._
 
-object Main extends App with Imap with EmailWriter with BlogWriter {
+object Main extends Imap with EmailWriter with BlogWriter {
 
   System.setProperty("java.awt.headless", "true")
 
-  require(args.length == 3, "Usage: /path/to/blog email@address.com ema1lp@ssw0rd")
+  def temporaryDir: Path = {
+    import java.nio.file.Files
+    val mediadir = Files.createTempDirectory("telepost")
+    mediadir.toFile.deleteOnExit()
+    Path(mediadir.toFile)
+  }
 
-  val blog = Path.fromString(args(0))
-  val emailLogin = Credentials(args(1), args(2))
+  def main(args: Array[String]): Unit = args match {
+    case Array(posts, email, password, bucket, s3key, s3secret) =>
 
-  val mediadir = (blog / "media").createDirectory(failIfExists=false)
-  val postsdir = (blog / "_posts").createDirectory(failIfExists=false)
+      val emailLogin = ImapCredentials(email, password)
+      val mediadir = temporaryDir
+      val postsdir = Path.fromString(posts).createDirectory(failIfExists=false)
 
-  val save = write(mediadir) _
-  val mkblog = blog(postsdir) _
+      val save = write(mediadir) _
+      val mkblog = blog(postsdir) _
 
-  val telegram = save andThen mkblog
+      val telegram = save andThen mkblog
 
-  val numEmails = checkMail(emailLogin) { email => telegram(email) }
+      val numEmails = checkMail(emailLogin) { email => telegram(email) }
 
-  // By convention, exit codes of zero indicate success, but we're
-  // returning the number of messages seen. So zero would mean "did nothing", and
-  // 1 would mean "saw an email".
-  System.exit(numEmails)
+      // By convention, exit codes of zero indicate success, but we're
+      // returning the number of messages seen.
+      // So zero would mean "did nothing", and 1 would mean "saw an email".
+      System.exit(numEmails)
+
+    case _ => println("Usage: Main postsDir tempDir email emailPassword bucket s3-key s3-secret")
+  }
+
 }
