@@ -7,10 +7,9 @@ libraryDependencies ++= Seq(
   "com.github.scala-incubator.io" %% "scala-io-core"    % "0.4.3",
   "com.github.scala-incubator.io" %% "scala-io-file"    % "0.4.3",
   "javax.mail"                    % "mail"              % "1.4",
-  "org.imgscalr"                  % "imgscalr-lib"      % "4.2",
   "com.amazonaws"                 % "aws-java-sdk-s3"   % "1.11.41",
   "com.amazonaws"                 % "aws-java-sdk-core" % "1.11.41",
-  "org.apache.sanselan"           % "sanselan"          % "0.97-incubator"
+  "net.coobird"                   % "thumbnailator"     % "0.4.8"
 )
 
 // http://www.scala-sbt.org/0.13/docs/Forking.html

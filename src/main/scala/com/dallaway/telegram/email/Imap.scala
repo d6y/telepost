@@ -1,13 +1,14 @@
 package com.dallaway.telegram.email
 
 import javax.mail._
+import scala.util.Try
 
 trait Imap {
 
   // Apply handler to each email found, returning the number of emails found
-  def checkMail(login: ImapCredentials)(handler: javax.mail.Message => Unit): Int = {
+  def checkMail[R](login: ImapCredentials)(handler: javax.mail.Message => Try[R]): Seq[Try[R]] = {
 
-    def withInbox[T](f: javax.mail.Folder ⇒ T) : T = {
+    def withInbox[T](f: javax.mail.Folder => T) : T = {
       val props = new java.util.Properties
       props.put("mail.store.protocol", "imaps")
 
@@ -30,21 +31,15 @@ trait Imap {
 
 
     withInbox { inbox =>
-
-      val n = inbox.getMessageCount
-
-      if (n > 0)
-        for(i <- 1 to n) {
-          val m = inbox.getMessage(i)
-          try {
-            handler(m)
-            m.setFlag(Flags.Flag.DELETED, true) // archive successfully processed messages
-          } catch {
-            case x : Throwable => x.printStackTrace()
-          }
-        }
-
-       n
+      inbox.getMessageCount match {
+        case 0 => Seq.empty
+        case n => for {
+          i      <- 1 to n
+          m      =  inbox.getMessage(i)
+          result =  handler(m)
+          _      =  m.setFlag(Flags.Flag.DELETED, true) // archive
+        } yield result
+      }
     }
 
   }

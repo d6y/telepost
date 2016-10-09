@@ -1,5 +1,5 @@
 
-import scala.util.{Success, Failure}
+import scala.util.{Try, Success, Failure}
 import scalax.file.Path
 
 import com.dallaway.telegram.email._
@@ -34,19 +34,20 @@ object Main extends Imap with EmailWriter with BlogWriter {
 
       val extractContent = (save andThen s3.putAttachments)
 
-      val numEmails = checkMail(emailLogin) { email => 
-        extractContent(email).map(mkblog) match {
-          case Success(info) => 
-            println(s"Processed: $info")
-          case Failure(err)  => 
-            println(s"Failure processing ${email.getSubject} into $mediadir")
-            err.printStackTrace()
+      val result: Seq[Try[BlogFilename]] = checkMail(emailLogin) { email =>
+        extractContent(email).map(mkblog).recoverWith {
+          // add information about the email into the failure
+          case err => Failure[BlogFilename](new RuntimeException(s"Failure processing ${email.getSubject}", err))
         }
       }
 
-      // By convention, exit codes of zero indicate success, but we're
-      // returning the number of messages seen. So zero would mean "did nothing", and 1 would mean "saw an email".
-      System.exit(numEmails)
+      val happy = result.collect{ case Success(file) => file }
+      val sad = result.collect { case Failure(err) => err }
+
+      happy.foreach { file => println(s"Processed: $file") }
+      sad.foreach { err => err.printStackTrace }
+
+      if (sad.isEmpty) System.exit(0) else System.exit(1)
 
     case _ => println("Usage: Main posts-dir email password bucket s3-key s3-secret")
   }
