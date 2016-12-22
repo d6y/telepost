@@ -14,7 +14,9 @@ object Main extends Imap with EmailWriter with BlogWriter {
     val path = Path(mediadir.toFile)
 
     Runtime.getRuntime().addShutdownHook(new Thread() {
-      override def run(): Unit = path.deleteRecursively()
+      override def run(): Unit = {
+        val _ = path.deleteRecursively()
+      }
     })
 
     path
@@ -34,20 +36,37 @@ object Main extends Imap with EmailWriter with BlogWriter {
 
       val extractContent = (save andThen s3.putAttachments)
 
-      val result: Seq[Try[BlogFilename]] = checkMail(emailLogin) { email =>
+      def succeed(msg: String): Unit = {
+        println(msg)
+        System.exit(0)
+      }
+      
+      def fail(ex: Throwable): Unit = {
+        println(ex.getMessage)
+        System.exit(1)
+      }
+
+      val result = checkMail(emailLogin) { email =>
         extractContent(email).map(mkblog).recoverWith {
           // add information about the email into the failure
           case err => Failure[BlogFilename](new RuntimeException(s"Failure processing ${email.getSubject}", err))
         }
       }
 
-      val happy = result.collect{ case Success(file) => file }
-      val sad = result.collect { case Failure(err) => err }
+      result match {
+        case NothingToDo => succeed("Nothing to do")
+        case Fail(cause) => fail(cause)
+        case ConnectionTimeout(cause) => succeed(s"Timeout: $cause")
+        case Processed(posts) =>
 
-      happy.foreach { file => println(s"Processed: $file") }
-      sad.foreach { err => err.printStackTrace }
+          val happy = posts.collect{ case Success(file) => file }
+          val sad = posts.collect { case Failure(err) => err }
 
-      if (sad.isEmpty) System.exit(0) else System.exit(1)
+          happy.foreach { file => println(s"Processed: $file") }
+          sad.foreach { err => err.printStackTrace }
+
+          if (sad.isEmpty) succeed("Posts processed") else fail(sad.head)
+      }
 
     case _ => println("Usage: Main posts-dir email password bucket s3-key s3-secret")
   }

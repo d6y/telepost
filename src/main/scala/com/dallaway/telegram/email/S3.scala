@@ -26,7 +26,7 @@ case class S3(bucketName: String, credentials: AWSCredentials, mediaDir: Path) {
     def put(filename: String): Unit = {
       val file = new File((mediaDir / filename).toAbsolute.path)
       val req = new PutObjectRequest(bucketName, filename, file).withCannedAcl(CannedAccessControlList.PublicRead)
-      client.putObject(req)
+      val objectInfo = client.putObject(req)
     }
 
     val s3attachments = for {

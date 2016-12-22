@@ -20,4 +20,4 @@ mainClass := Some("Main")
 
 scalaVersion := "2.11.8"
 
-scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
+scalacOptions ++= Seq("-Ywarn-value-discard", "-unchecked", "-deprecation", "-feature")
