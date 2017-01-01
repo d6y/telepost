@@ -11,6 +11,10 @@ trait BlogWriter {
 
     val attachments = email.attachments.map(_.toHtml).mkString
 
+    val featured = email.attachments.headOption.map(_.inlineUrlPath).map(url =>
+      s"image: $url"
+    )
+
     val dateTime = new SimpleDateFormat("yyyy-MM-dd HH:mm").format(email.meta.sentDate)
 
     val blog =
@@ -21,13 +25,19 @@ trait BlogWriter {
          |date: %s
          |layout: post
          |comments: true
+         |%s
          |---
          |
          |%s
          |
          |%s
       """.stripMargin.format (
-        email.meta.title, email.meta.sender, dateTime, attachments, email.body)
+        email.meta.title,
+        email.meta.sender,
+        dateTime,
+        featured getOrElse "",
+        attachments,
+        email.body)
 
     val date = new SimpleDateFormat("yyyy-MM-dd").format(email.meta.sentDate)
     val filename = date + "-" + email.meta.slug + ".md"
