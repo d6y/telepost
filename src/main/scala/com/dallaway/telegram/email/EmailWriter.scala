@@ -68,7 +68,8 @@ trait EmailWriter {
       i <- 0 until p.getCount
       b  = p.getBodyPart(i)
       if b.getDisposition != null
-      a <- savedAttachment(mediaDir, b.getInputStream, b.mimeType, Clean(b.getFileName ,meta))
+      uniqueName = s"${i}-${b.getFileName}"
+      a <- savedAttachment(mediaDir, b.getInputStream, b.mimeType, Clean(uniqueName,meta))
     } yield a
 
 
