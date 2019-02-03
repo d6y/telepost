@@ -9,7 +9,6 @@ package com.dallaway.telegram.email
 import scalax.io._
 import Resource._
 import scalax.file.Path
-import scalax.file.PathMatcher._
 import javax.mail._
 import javax.mail.internet._
 import java.io.InputStream
