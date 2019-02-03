@@ -4,7 +4,6 @@ import javax.imageio.ImageIO
 import scalax.file.Path
 
 import scala.util.Try
-import net.coobird.thumbnailator.Thumbnails
 
 object ImageResizer {
 
@@ -17,13 +16,15 @@ object ImageResizer {
   }
 
   /* Using JVM code results in blured images as of 2019
-  def scale(source: Path, mimeType: String, dest: Path, targetWidth: Int): Option[ImageSize] =
+  def scale(source: Path, mimeType: String, dest: Path, targetWidth: Int): Option[ImageSize] = {
+    import net.coobird.thumbnailator.Thumbnails
     for {
       in    <- source.fileOption
       thumb =  Thumbnails.of(in).useExifOrientation(true).width(targetWidth).asBufferedImage()
       out   <- dest.fileOption
       _     =  Thumbnails.of(thumb).scale(1).outputQuality(0.95).toFile(out)
     } yield ImageSize(thumb.getWidth, thumb.getHeight)
+  }
   */
 
   // Delegate to image magic

@@ -9,7 +9,9 @@ libraryDependencies ++= Seq(
   "javax.mail"                    % "mail"              % "1.4",
   "com.amazonaws"                 % "aws-java-sdk-s3"   % "1.11.41",
   "com.amazonaws"                 % "aws-java-sdk-core" % "1.11.41",
-  "net.coobird"                   % "thumbnailator"     % "0.4.8",
+  // For image resizing, I'm trying out replacing a Java thumbnailer...
+  //"net.coobird"                   % "thumbnailator"     % "0.4.8",
+  // ...with a wrapper around image magick:
   "org.im4java"                   % "im4java"           % "1.4.0"
 )
 
