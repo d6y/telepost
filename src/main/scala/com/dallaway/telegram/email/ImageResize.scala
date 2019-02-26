@@ -15,19 +15,6 @@ object ImageResizer {
     }
   }
 
-  /* Using JVM code results in blured images as of 2019
-  def scale(source: Path, mimeType: String, dest: Path, targetWidth: Int): Option[ImageSize] = {
-    import net.coobird.thumbnailator.Thumbnails
-    for {
-      in    <- source.fileOption
-      thumb =  Thumbnails.of(in).useExifOrientation(true).width(targetWidth).asBufferedImage()
-      out   <- dest.fileOption
-      _     =  Thumbnails.of(thumb).scale(1).outputQuality(0.95).toFile(out)
-    } yield ImageSize(thumb.getWidth, thumb.getHeight)
-  }
-  */
-
-  // Delegate to image magic
   def scale(source: Path, mimeType: String, dest: Path, width: Int): Option[ImageSize] = {
     val attempt = for {
       _ <- magicScale(source, width, dest)
@@ -47,12 +34,15 @@ object ImageResizer {
     ImageSize(img.getWidth, img.getHeight)
   }
 
+  // Java API version of:
+  // convert in.jpg -resize 500x -auto-orient out.jpg
   def magicScale(source: Path, width: Int, dest: Path): Try[Unit] = Try {
     import org.im4java.core._
     val cmd = new ConvertCmd()
     val op = new IMOperation()
     source.fileOption.foreach(file => op.addImage(file.getAbsolutePath))
     op.resize(width, null)
+    op.autoOrient()
     dest.fileOption.foreach(file => op.addImage(file.getAbsolutePath))
     cmd.run(op)
   }
