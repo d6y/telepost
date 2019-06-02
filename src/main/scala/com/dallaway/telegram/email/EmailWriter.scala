@@ -22,18 +22,15 @@ trait EmailWriter {
   // Returns the details about the email content and  where to find the attachments.
   def write(mediaDir: Path)(m: Message): EmailInfo = {
 
-  val bodyText = body(m)
+    val bodyText = body(m)
 
-  val meta = EmailMeta(
-    sender(m),
-    m.getSentDate,
-    Option(m.getSubject) getOrElse bodyText
-  )
+    val meta = EmailMeta(
+      sender(m),
+      m.getSentDate,
+      Option(m.getSubject) getOrElse bodyText
+    )
 
-  EmailInfo(
-    meta,
-    bodyText,
-    for ( a <- attachments(mediaDir, m, meta) ) yield a)
+    EmailInfo(meta, bodyText, for (a <- attachments(mediaDir, m, meta)) yield a)
   }
 
   // The sender (ideally, their real name).
@@ -55,37 +52,38 @@ trait EmailWriter {
   // The body text of a message.
   private def body(m: Part): String = m.getContent match {
     case c: String if m.isMimeType("text/plain") => c
-    case p: MimeMultipart => p.bodyParts map { body } mkString " "
+    case p: MimeMultipart                        => p.bodyParts map { body } mkString " "
     case _ => ""
   }
 
   // Locate and extract each attachment in the email:
-  private def attachments(mediaDir: Path, m: Part, meta: EmailMeta) : Seq[ImageAttachment] = m.getContent match {
+  private def attachments(mediaDir: Path, m: Part, meta: EmailMeta): Seq[ImageAttachment] =
+    m.getContent match {
 
-    // * A body part attachment
-    case p: MimeMultipart => for {
-      i <- 0 until p.getCount
-      b  = p.getBodyPart(i)
-      if b.getDisposition != null
-      uniqueName = s"${i}-${b.getFileName}"
-      a <- savedAttachment(mediaDir, b.getInputStream, b.mimeType, Clean(uniqueName,meta))
-    } yield a
+      // * A body part attachment
+      case p: MimeMultipart =>
+        for {
+          i <- 0 until p.getCount
+          b = p.getBodyPart(i)
+          if b.getDisposition != null
+          uniqueName = s"$i-${b.getFileName}"
+          a <- savedAttachment(mediaDir, b.getInputStream, b.mimeType, Clean(uniqueName, meta))
+        } yield a
 
+      // * Inline content
+      case s: InputStream =>
+        savedAttachment(mediaDir, s, m.mimeType, Clean(m.getFileName, meta)).toList
 
-    // * Inline content
-    case s: InputStream => savedAttachment(mediaDir, s, m.mimeType, Clean(m.getFileName, meta)).toList
-
-    // * Content we don't need to handle
-    case otherwise => println("Found a "+otherwise); Nil
-  }
-
+      // * Content we don't need to handle
+      case otherwise => println("Found a " + otherwise); Nil
+    }
 
   // Save one attachment to disk at full-size, and one scaled to width of 500px.
   private def savedAttachment(
-    mediaDir : Path,
-    in       : =>InputStream,
-    mimeType : String,
-    fileName : Clean
+    mediaDir: Path,
+    in:       => InputStream,
+    mimeType: String,
+    fileName: Clean
   ): Option[ImageAttachment] = {
 
     // - Save original image (to link to):
@@ -93,12 +91,11 @@ trait EmailWriter {
     dest.write(fromInputStream(in).bytes)
 
     // - Scaled version to show inline the blog:
-    val width = 500
+    val width      = 500
     val inlineFile = mediaDir / fileName.thumbName
 
-      for ( inlineSize <- ImageResizer.scale(dest, mimeType, inlineFile, width) )
-      yield
-        ImageAttachment(dest.name, inlineFile.name, inlineSize, mimeType)
+    for (inlineSize <- ImageResizer.scale(dest, mimeType, inlineFile, width))
+      yield ImageAttachment(dest.name, inlineFile.name, inlineSize, mimeType)
   }
 
 }

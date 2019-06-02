@@ -4,9 +4,9 @@ import scala.util.Try
 import java.io.File
 import scalax.file.Path
 
-import com.amazonaws.auth.{AWSCredentials, BasicAWSCredentials, AWSStaticCredentialsProvider}
+import com.amazonaws.auth.{AWSCredentials, AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.services.s3.{AmazonS3Client, AmazonS3ClientBuilder}
-import com.amazonaws.services.s3.model.{PutObjectRequest, CannedAccessControlList}
+import com.amazonaws.services.s3.model.{CannedAccessControlList, PutObjectRequest}
 
 object S3 {
   def credentials(key: String, secret: String): AWSCredentials =
@@ -21,19 +21,24 @@ case class S3(bucketName: String, credentials: AWSCredentials, mediaDir: Path) {
   // Return an EmailInfo value with the attachments updated to their URL on S3.
   def putAttachments(email: EmailInfo): Try[EmailInfo] = Try {
 
-    val client = AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(credentials)).build()
+    val client = AmazonS3ClientBuilder
+      .standard()
+      .withCredentials(new AWSStaticCredentialsProvider(credentials))
+      .build()
 
     def put(filename: String): Unit = {
       val file = new File((mediaDir / filename).toAbsolute.path)
-      val req = new PutObjectRequest(bucketName, filename, file).withCannedAcl(CannedAccessControlList.PublicRead)
+      val req = new PutObjectRequest(bucketName, filename, file)
+        .withCannedAcl(CannedAccessControlList.PublicRead)
       val objectInfo = client.putObject(req)
     }
 
     val s3attachments = for {
       a <- email.attachments
-      _  = put(a.fullUrlPath)
-      _  = put(a.inlineUrlPath)
-    } yield a.copy(
+      _ = put(a.fullUrlPath)
+      _ = put(a.inlineUrlPath)
+    } yield
+      a.copy(
         fullUrlPath   = s"http://$bucketName/${a.fullUrlPath}",
         inlineUrlPath = s"http://$bucketName/${a.inlineUrlPath}"
       )

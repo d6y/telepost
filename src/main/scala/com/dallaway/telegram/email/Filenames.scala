@@ -15,7 +15,7 @@ object Clean {
     def replaceAllButLast(source: Char, dest: Char): String =
       in.lastIndexOf(source) match {
         case -1 => in
-        case n => in.substring(0,n).replace(source,dest) + in.substring(n)
+        case n  => in.substring(0, n).replace(source, dest) + in.substring(n)
       }
   }
 }
@@ -24,4 +24,3 @@ case class Clean(fullName: String) {
   // Convention for the thumbnail filename
   def thumbName: String = fullName.replace("-fullsize-", "-thumb-")
 }
-

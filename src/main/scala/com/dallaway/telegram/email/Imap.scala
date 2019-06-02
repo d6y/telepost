@@ -4,10 +4,10 @@ import javax.mail._
 import scala.util.Try
 
 sealed trait Result
-case class  ConnectionTimeout(ex: Throwable) extends Result
-case object NothingToDo                      extends Result
-case class  Fail(ex: Throwable)              extends Result
-case class  Processed[R](posts: Seq[Try[R]]) extends Result
+case class ConnectionTimeout(ex: Throwable) extends Result
+case object NothingToDo extends Result
+case class Fail(ex:            Throwable) extends Result
+case class Processed[R](posts: Seq[Try[R]]) extends Result
 
 trait Imap {
 
@@ -29,7 +29,7 @@ trait Imap {
 
       val result = f(inbox)
 
-      inbox.close(/*expurge=*/true)
+      inbox.close( /*expurge=*/ true)
       store.close()
 
       result
@@ -38,30 +38,30 @@ trait Imap {
     val processMailFolder: javax.mail.Folder => Result = inbox =>
       inbox.getMessageCount match {
         case 0 => NothingToDo
-        case n => Processed(for {
-          i      <- 1 to n
-          m      =  inbox.getMessage(i)
-          result =  handler(m)
-          _      =  m.setFlag(Flags.Flag.DELETED, true) // archive
-        } yield result)
-      }
+        case n =>
+          Processed(for {
+            i <- 1 to n
+            m      = inbox.getMessage(i)
+            result = handler(m)
+            _      = m.setFlag(Flags.Flag.DELETED, true) // archive
+          } yield result)
+    }
 
     def timeout(mx: javax.mail.MessagingException): Boolean =
       mx.getCause match {
-        case cx: java.net.ConnectException if cx.getMessage contains "timed out" => true
+        case cx: java.net.ConnectException if cx.getMessage contains "timed out" =>
+          true
         case _ => false
-    }
+      }
 
     try {
       withInbox { processMailFolder }
     } catch {
-      case mx: javax.mail.MessagingException if timeout(mx) => ConnectionTimeout(mx)
-      case ex: Throwable  => Fail(ex)
+      case mx: javax.mail.MessagingException if timeout(mx) =>
+        ConnectionTimeout(mx)
+      case ex: Throwable => Fail(ex)
     }
 
   }
 
 }
-
-
-
