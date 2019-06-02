@@ -4,8 +4,8 @@ import scala.util.Try
 import java.io.File
 import scalax.file.Path
 
-import com.amazonaws.auth.{AWSCredentials, BasicAWSCredentials}
-import com.amazonaws.services.s3.AmazonS3Client
+import com.amazonaws.auth.{AWSCredentials, BasicAWSCredentials, AWSStaticCredentialsProvider}
+import com.amazonaws.services.s3.{AmazonS3Client, AmazonS3ClientBuilder}
 import com.amazonaws.services.s3.model.{PutObjectRequest, CannedAccessControlList}
 
 object S3 {
@@ -21,7 +21,7 @@ case class S3(bucketName: String, credentials: AWSCredentials, mediaDir: Path) {
   // Return an EmailInfo value with the attachments updated to their URL on S3.
   def putAttachments(email: EmailInfo): Try[EmailInfo] = Try {
 
-    val client = new AmazonS3Client(credentials)
+    val client = AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(credentials)).build()
 
     def put(filename: String): Unit = {
       val file = new File((mediaDir / filename).toAbsolute.path)

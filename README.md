@@ -30,13 +30,6 @@ Serving suggestion
 Run via cron, and wrapper in a script that either commits and pushes to your GitHub hosted telegr.am blog, or move to a Dropbox folder.
 
 
-Known issues
-------------
-
-* Only does JPEGs
-* Doesn't do video or sound files
-* Probably needs to be a Sun JVM
-
 License
 =======
 
