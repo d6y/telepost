@@ -7,6 +7,7 @@ import scalax.file.Path
 import com.amazonaws.auth.{AWSCredentials, AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.services.s3.{AmazonS3Client, AmazonS3ClientBuilder}
 import com.amazonaws.services.s3.model.{CannedAccessControlList, PutObjectRequest}
+import com.amazonaws.regions.Regions.US_EAST_1
 
 object S3 {
   def credentials(key: String, secret: String): AWSCredentials =
@@ -18,11 +19,11 @@ object S3 {
 case class S3(bucketName: String, credentials: AWSCredentials, mediaDir: Path) {
 
   // Write the attachments (full and thumbnail) to S3.
-  // Return an EmailInfo value with the attachments updated to their URL on S3.
   def putAttachments(email: EmailInfo): Try[EmailInfo] = Try {
 
     val client = AmazonS3ClientBuilder
       .standard()
+      .withRegion(US_EAST_1)
       .withCredentials(new AWSStaticCredentialsProvider(credentials))
       .build()
 
