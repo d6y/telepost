@@ -19,6 +19,11 @@ For example:
 
     sbt "runMain Main blog/_posts me@example.org mypassw0rd images.bucket xxx yyy"
 
+or:
+
+    $ sbt assembly
+    $ java -jar target/scala-2.11/telepost-assembly-1.0.1.jar blog/_post email pass bucket key secret
+
 The subject is used as the title of the blog post and the filename.
 
 It will then delete the email (archive it).
